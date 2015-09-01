@@ -66,6 +66,35 @@ void GLWidget3D::resizeSketch(int width, int height) {
 	}*/
 }
 
+void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
+	if (fabs(stroke->points[0].x - stroke->points.back().x) < 10) {
+		// vertical line
+		if (stroke->points[0].y < stroke->points.back().y) {
+			// stroke->points[0]が地面にある
+		} else {
+			// stroke->points.back()が地面にある
+		}
+	} else {
+		// horizontal line
+		glm::vec3 p1 = unproject(stroke->points[0]);
+		glm::vec3 p2 = unproject(stroke->points.back());
+
+		std::vector<Vertex> vertices;
+		glutils::drawSphere(10, glm::vec3(0, 0, 1), glm::translate(glm::mat4(), p1), vertices);
+		glutils::drawSphere(10, glm::vec3(0, 0, 1), glm::translate(glm::mat4(), p2), vertices);
+		renderManager.addObject("point", "", vertices);
+	}
+}
+
+glm::vec3 GLWidget3D::unproject(const glm::vec2& point) {
+	glm::vec3 cameraPos = camera.cameraPosInWorld();
+	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * camera.aspect(), (height() * 0.5f - point.y) * 2.0f / height(), -camera.f());
+	dir = glm::vec3(glm::inverse(camera.mvMatrix) * glm::vec4(dir, 0));
+	dir = glm::normalize(dir);
+	glm::vec3 intPt = glutils::rayTriangleIntersection(cameraPos, dir, glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
+	return intPt;
+}
+
 void GLWidget3D::resizeGL(int width, int height) {
 	// sketch imageを更新
 	resizeSketch(width, height);
@@ -89,10 +118,15 @@ void GLWidget3D::mousePressEvent(QMouseEvent *e) {
 
 void GLWidget3D::mouseReleaseEvent(QMouseEvent *e) {
 	if (currentStroke != NULL) {
+		// compute 3d coordinates of user stroke
+		compute3dCoordinates(currentStroke);
+
 		strokes.push_back(*currentStroke);
 		delete currentStroke;
 		currentStroke = NULL;
 	}
+
+	update();
 }
 
 void GLWidget3D::mouseMoveEvent(QMouseEvent *e) {
@@ -120,8 +154,6 @@ void GLWidget3D::initializeGL() {
 
 	// set the clear color for the screen
 	qglClearColor(QColor(224, 224, 224));
-
-	camera.loadCameraPose("default.cam");
 
 	std::vector<Vertex> vertices;
 	glutils::drawAxes(1, 20, glm::mat4(), vertices);

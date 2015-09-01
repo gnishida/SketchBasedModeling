@@ -32,7 +32,6 @@ public:
 	QPoint lastPoint;
 	std::vector<Stroke> strokes;
 	Stroke* currentStroke;
-	//QImage sketch[parametriclsystem::NUM_LAYERS];
 
 public:
 	GLWidget3D(QWidget *parent = 0);
@@ -42,6 +41,8 @@ public:
 	void drawScene(int drawMode);
 	void drawLineTo(const QPoint &endPoint);
 	void resizeSketch(int width, int height);
+	void compute3dCoordinates(Stroke* stroke);
+	glm::vec3 unproject(const glm::vec2& point);
 
 protected:
 	void resizeGL(int width, int height);
