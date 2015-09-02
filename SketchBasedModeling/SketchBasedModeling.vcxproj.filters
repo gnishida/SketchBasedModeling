@@ -80,6 +80,9 @@
     <ClCompile Include="..\..\codebase\ShadowMapping.cpp">
       <Filter>Source Files\codebase</Filter>
     </ClCompile>
+    <ClCompile Include="PointCloud.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MainWindow.h">
@@ -115,6 +118,9 @@
       <Filter>Source Files\codebase</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PointCloud.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

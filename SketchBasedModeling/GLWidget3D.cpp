@@ -2,178 +2,6 @@
 #include <iostream>
 #include "GLUtils.h"
 
-//Face::Face(const glm::vec3& p1, const glm::vec3& p2, const glm::vec3& p3, const glm::vec3& p4) {
-Face::Face(int p1, int p2, int p3, int p4) {
-	points.push_back(p1);
-	points.push_back(p2);
-	points.push_back(p3);
-	points.push_back(p4);
-}
-
-bool Face::contain(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
-	if (std::find(points.begin(), points.end(), edge1.first) == points.end()) return false;
-	if (std::find(points.begin(), points.end(), edge1.second) == points.end()) return false;
-	if (std::find(points.begin(), points.end(), edge2.first) == points.end()) return false;
-	if (std::find(points.begin(), points.end(), edge2.second) == points.end()) return false;
-	return true;
-}
-
-void PointList::addEdge(glm::vec3& p1, glm::vec3& p2) {
-	int e1, e2;
-	if (!snapPoint(p1, 2.0f, e1)) {
-		e1 = points.size();
-		points.push_back(p1);
-	}
-	align(p1, p2);
-
-	if (!snapPoint(p2, 2.0f, e2)) {
-		e2 = points.size();
-		points.push_back(p2);
-	}
-
-	new_edges.push_back(std::make_pair(e1, e2));
-
-	// if two edges are perpendicular and have a common vertex, then create a face!
-	for (int k = 0; k < new_edges.size(); ++k) {
-		for (int i = 0; i < edges.size(); ++i) {	
-			if (glm::dot(points[new_edges[k].first] - points[new_edges[k].second], points[edges[i].first] - points[edges[i].second]) < 0.1f) {
-				if (edges[i].first == new_edges[k].first
-					|| edges[i].first == new_edges[k].second
-					|| edges[i].second == new_edges[k].first
-					|| edges[i].second == new_edges[k].second) {
-					if (!isFace(edges[i], new_edges[k])) {
-						addFace(edges[i], new_edges[k], new_edges);
-					}
-				}
-			}
-		}
-		edges.push_back(new_edges[k]);
-	}
-
-	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
-	new_edges.clear();
-}
-
-bool PointList::snapPoint(glm::vec3& point, float threshold, int& index) {
-	float min_dist = (std::numeric_limits<float>::max)();
-
-	for (int i = 0; i < points.size(); ++i) {
-		float dist = glm::length(points[i] - point);
-		if (dist < min_dist) {
-			min_dist = dist;
-			index = i;
-		}
-	}
-
-	if (min_dist < threshold) {
-		return true;
-	} else {
-		return false;
-	}
-}
-
-bool PointList::isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
-	for (int i = 0; i < faces.size(); ++i) {
-		if (faces[i].contain(edge1, edge2)) return true;
-	}
-
-	return false;
-}
-
-void PointList::addFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2, std::vector<std::pair<int, int> >& new_edges) {
-	//glm::vec3 p1, p2, p3, p4;
-	int p1, p2, p3, p4;
-
-	if (edge1.first == edge2.first) {
-		p1 = edge1.second;
-		p2 = edge1.first;
-		p3 = edge2.second;
-		/*
-		std::pair<int, int> new_e1(edge1.second, points.size());
-		std::pair<int, int> new_e2(edge2.second, points.size());
-
-		new_edges.push_back(new_e1);
-		new_edges.push_back(new_e2);
-		*/
-	} else if (edge1.first == edge2.second) {
-		p1 = edge1.second;
-		p2 = edge1.first;
-		p3 = edge2.first;
-		/*
-		std::pair<int, int> new_e1(edge1.second, points.size());
-		std::pair<int, int> new_e2(edge2.first, points.size());
-
-		new_edges.push_back(new_e1);
-		new_edges.push_back(new_e2);
-		*/
-	} else if (edge1.second == edge2.first) {
-		p1 = edge1.first;
-		p2 = edge1.second;
-		p3 = edge2.second;
-		/*
-		std::pair<int, int> new_e1(edge1.first, points.size());
-		std::pair<int, int> new_e2(edge2.second, points.size());
-
-		new_edges.push_back(new_e1);
-		new_edges.push_back(new_e2);
-		*/
-	} else {
-		p1 = edge1.first;
-		p2 = edge1.second;
-		p3 = edge2.first;
-		/*
-		std::pair<int, int> new_e1(edge1.first, points.size());
-		std::pair<int, int> new_e2(edge2.first, points.size());
-
-		new_edges.push_back(new_e1);
-		new_edges.push_back(new_e2);
-		*/
-	}
-
-	glm::vec3 new_pt = points[p1] + points[p3] - points[p2];
-	if (!snapPoint(new_pt, 2.0f, p4)) {
-		p4 = points.size();
-		points.push_back(points[p1] + points[p3] - points[p2]);
-	}
-
-	if (std::find(edges.begin(), edges.end(), std::make_pair(p1, p4)) == edges.end()
-		&& std::find(new_edges.begin(), new_edges.end(), std::make_pair(p1, p4)) == new_edges.end()) {
-		new_edges.push_back(std::make_pair(p1, p4));
-	}
-	if (std::find(edges.begin(), edges.end(), std::make_pair(p3, p4)) == edges.end()
-		&& std::find(new_edges.begin(), new_edges.end(), std::make_pair(p3, p4)) == new_edges.end()) {
-		new_edges.push_back(std::make_pair(p3, p4));
-	}
-
-	faces.push_back(Face(p1, p2, p3, p4));
-}
-
-void PointList::align(const glm::vec3& p1, glm::vec3& p2) {
-	if (fabs(p1.x - p2.x) < 2.0f) {
-		p2.x = p1.x;
-	}
-	if (fabs(p1.y - p2.y) < 2.0f) {
-		p2.y = p1.y;
-	}
-	if (fabs(p1.z - p2.z) < 2.0f) {
-		p2.z = p1.z;
-	}
-}
-
-void PointList::generate(RenderManager* renderManager) {
-	renderManager->removeObject("face");
-
-	std::vector<Vertex> vertices;
-	for (int i = 0; i < faces.size(); ++i) {
-		std::vector<glm::vec3> pts;
-		for (int k = 0; k < faces[i].points.size(); ++k) {
-			pts.push_back(points[faces[i].points[k]]);
-		}
-		glutils::drawPolygon(pts, glm::vec3(1, 1, 1), glm::mat4(), vertices);
-	}
-	renderManager->addObject("face", "", vertices);
-}
-
 GLWidget3D::GLWidget3D(QWidget *parent) : QGLWidget(QGLFormat(QGL::SampleBuffers), parent) {
 	setAutoFillBackground(false);
 
@@ -241,13 +69,70 @@ void GLWidget3D::resizeSketch(int width, int height) {
 }
 
 void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
-	if (fabs(stroke->points[0].x - stroke->points.back().x) < 20) {
-		// vertical line
+	int face_index;
+	std::vector<glm::vec3> face_points;	
+
+	// ワールド座標系でのカメラ座標
+	glm::vec3 cameraPos = camera.cameraPosInWorld();
+
+	// 視線ベクトル
+	glm::vec3 view_v1 = viewVector(stroke->points[0], camera.mvMatrix, camera.f(), camera.aspect());
+
+	if (points.hitFace(cameraPos, view_v1, camera.mvpMatrix, face_index)) {
+		for (int i = 0; i < points.faces[face_index].points.size(); ++i) {
+			face_points.push_back(points.points[points.faces[face_index].points[i]]);
+		}
+	} else {
+		face_points.push_back(glm::vec3(-1000, 0, -1000));
+		face_points.push_back(glm::vec3(-1000, 0, 1000));
+		face_points.push_back(glm::vec3(1000, 0, 1000));
+		face_points.push_back(glm::vec3(1000, 0, -1000));
+	}
+
+	// faceの中心座標を計算
+	glm::vec3 face_center;
+	for (int i = 0; i < face_points.size(); ++i) {
+		face_center += face_points[i];
+	}
+	face_center /= face_points.size();
+
+	// faceの法線ベクトル
+	glm::vec3 face_normal = glm::normalize(glm::cross(face_points[1] - face_points[0], face_points[2] - face_points[1]));
+
+	// 法線ベクトルを、スクリーン座標系に変換
+	glm::vec3 face_above= face_center + face_normal;
+	glm::vec4 face_center_projected = camera.mvpMatrix * glm::vec4(face_center, 1);
+	glm::vec4 face_above_projected = camera.mvpMatrix * glm::vec4(face_above, 1);
+	glm::vec2 face_normal_projected = glm::normalize(glm::vec2(face_above_projected.x / face_above_projected.w - face_center_projected.x / face_center_projected.w,
+		face_above_projected.y / face_above_projected.w - face_center_projected.y / face_center_projected.w));
+
+	// strokeのベクトル
+	glm::vec2 stroke_vec = glm::normalize(stroke->points[0] - stroke->points.back());
+
+	int e1, e2;
+	if (fabs(glm::dot(face_normal_projected, stroke_vec)) > 0.8f) { // vertical line
+		glm::vec3 p1 = unproject(stroke->points[0], face_points, face_normal);
+		points.snapPoint(p1, 2.0f, e1);
+		glm::vec3 p2 = unproject(stroke->points.back(), p1, face_normal);
+		points.snapPoint(p2, 2.0f, e2);
+		points.addEdge(p1, p2);
+	} else { // horizontal line
+		glm::vec3 p1 = unproject(stroke->points[0], face_points, face_normal);
+		glm::vec3 p2 = unproject(stroke->points.back(), face_points, face_normal);
+		points.addEdge(p1, p2);
+	}
+
+
+
+
+	/*
+	if (fabs(stroke->points[0].x - stroke->points.back().x) < 20) { // vertical line		
 		if (stroke->points[0].y > stroke->points.back().y) { // stroke->points[0]が地面にある
 			int e1, e2;
 			glm::vec3 p1 = unproject(stroke->points[0]);
 			points.snapPoint(p1, 2.0f, e1);
 			glm::vec3 p2 = unproject(stroke->points.back(), p1);
+			points.snapPoint(p2, 2.0f, e2);
 			points.addEdge(p1, p2);
 		} else { // stroke->points.back()が地面にある
 			int e1, e2;
@@ -264,33 +149,37 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 		//PointList::align(p1, p2);
 		points.addEdge(p1, p2);
 	}
+	*/
 
 	points.generate(&renderManager);
 }
 
-glm::vec3 GLWidget3D::unproject(const glm::vec2& point) {
+glm::vec3 GLWidget3D::unproject(const glm::vec2& point, const std::vector<glm::vec3>& face_points, const glm::vec3& face_normal) {
 	glm::vec3 cameraPos = camera.cameraPosInWorld();
 	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * camera.aspect(), (height() * 0.5f - point.y) * 2.0f / height(), -camera.f());
 	dir = glm::vec3(glm::inverse(camera.mvMatrix) * glm::vec4(dir, 0));
 
-	//dir = glm::normalize(dir);
-	glm::vec3 intPt = glutils::rayTriangleIntersection(cameraPos, dir, glm::vec3(0, 1, 0), glm::vec3(0, 0, 0));
-	intPt.y = 0;
+	glm::vec3 intPt = glutils::rayPlaneIntersection(cameraPos, dir, face_points[0], face_normal);
 	return intPt;
 }
 
-glm::vec3 GLWidget3D::unproject(const glm::vec2& point, const glm::vec3& verticalRefPt) {
+glm::vec3 GLWidget3D::unproject(const glm::vec2& point, const glm::vec3& reference_point, const glm::vec3& vec) {
 	glm::vec3 cameraPos = camera.cameraPosInWorld();
 	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * camera.aspect(), (height() * 0.5f - point.y) * 2.0f / height(), -camera.f());
 	dir = glm::vec3(glm::inverse(camera.mvMatrix) * glm::vec4(dir, 0));
 
-	float t1 = (verticalRefPt.x - cameraPos.x) / dir.x;
-	float t2 = (verticalRefPt.z - cameraPos.z) / dir.z;
-	float t = (t1 + t2) * 0.5f;
-
-	return glm::vec3(verticalRefPt.x, cameraPos.y + dir.y * t, verticalRefPt.z);
+	glm::vec3 intPt = glutils::lineLineIntersection(cameraPos, dir, reference_point, vec);
+	return intPt;
 }
 
+glm::vec2 GLWidget3D::normalizeScreenCoordinates(const glm::vec2& point) {
+	return glm::vec2((point.x - width() * 0.5f) * 2.0f / width(), (height() * 0.5f - point.y) * 2.0f / height());
+}
+
+glm::vec3 GLWidget3D::viewVector(const glm::vec2& point, const glm::mat4& mvMatrix, float focalLength, float aspect) {
+	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * aspect, (height() * 0.5f - point.y) * 2.0f / height(), -focalLength);
+	return glm::vec3(glm::inverse(mvMatrix) * glm::vec4(dir, 0));
+}
 
 void GLWidget3D::resizeGL(int width, int height) {
 	// sketch imageを更新
@@ -356,7 +245,7 @@ void GLWidget3D::initializeGL() {
 	glutils::drawAxes(1, 20, glm::mat4(), vertices);
 	renderManager.addObject("axis", "", vertices);
 	vertices.clear();
-	glutils::drawGrid(200, 200, 10, glm::vec3(0.8, 0.8, 0.8), glm::vec3(1, 1, 1), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
+	glutils::drawGrid(200, 200, 10, glm::vec3(0.3, 0.6, 0.8), glm::vec3(1, 1, 1), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
 	renderManager.addObject("grid", "", vertices);
 
 	currentStroke = NULL;

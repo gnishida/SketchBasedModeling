@@ -1,0 +1,176 @@
+﻿#include "PointCloud.h"
+#include "GLUtils.h"
+
+Face::Face(int p1, int p2, int p3, int p4) {
+	points.push_back(p1);
+	points.push_back(p2);
+	points.push_back(p3);
+	points.push_back(p4);
+}
+
+bool Face::contain(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
+	if (std::find(points.begin(), points.end(), edge1.first) == points.end()) return false;
+	if (std::find(points.begin(), points.end(), edge1.second) == points.end()) return false;
+	if (std::find(points.begin(), points.end(), edge2.first) == points.end()) return false;
+	if (std::find(points.begin(), points.end(), edge2.second) == points.end()) return false;
+	return true;
+}
+
+void PointList::addEdge(glm::vec3& p1, glm::vec3& p2) {
+	int e1, e2;
+	if (!snapPoint(p1, 2.0f, e1)) {
+		e1 = points.size();
+		points.push_back(p1);
+	}
+	align(p1, p2);
+
+	if (!snapPoint(p2, 2.0f, e2)) {
+		e2 = points.size();
+		points.push_back(p2);
+	}
+
+	new_edges.push_back(std::make_pair(e1, e2));
+
+	// if two edges are perpendicular and have a common vertex, then create a face!
+	for (int k = 0; k < new_edges.size(); ++k) {
+		for (int i = 0; i < edges.size(); ++i) {
+			glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
+			glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
+			if (glm::dot(v1, v2) < 0.2f) {
+				if (edges[i].first == new_edges[k].first
+					|| edges[i].first == new_edges[k].second
+					|| edges[i].second == new_edges[k].first
+					|| edges[i].second == new_edges[k].second) {
+					if (!isFace(edges[i], new_edges[k])) {
+						addFace(edges[i], new_edges[k], new_edges);
+					}
+				}
+			}
+		}
+		edges.push_back(new_edges[k]);
+	}
+
+	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
+	new_edges.clear();
+}
+
+/**
+ * 指定された点を、既存の点にsnapさせる。snapした場合には、trueを返却し、また、snap先の点のindexを返却する。
+ *
+ * @param point		指定された点の座標
+ * @param threshold	しきい値
+ * @param index		snap先の点のindex
+ * @return			snapしたらtrueを返却する
+ */
+bool PointList::snapPoint(glm::vec3& point, float threshold, int& index) {
+	float min_dist = (std::numeric_limits<float>::max)();
+
+	for (int i = 0; i < points.size(); ++i) {
+		float dist = glm::length(points[i] - point);
+		if (dist < min_dist) {
+			min_dist = dist;
+			index = i;
+		}
+	}
+
+	if (min_dist < threshold) {
+		point = points[index];
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool PointList::isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
+	for (int i = 0; i < faces.size(); ++i) {
+		if (faces[i].contain(edge1, edge2)) return true;
+	}
+
+	return false;
+}
+
+void PointList::addFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2, std::vector<std::pair<int, int> >& new_edges) {
+	//glm::vec3 p1, p2, p3, p4;
+	int p1, p2, p3, p4;
+
+	if (edge1.first == edge2.first) {
+		p1 = edge1.second;
+		p2 = edge1.first;
+		p3 = edge2.second;
+	} else if (edge1.first == edge2.second) {
+		p1 = edge1.second;
+		p2 = edge1.first;
+		p3 = edge2.first;
+	} else if (edge1.second == edge2.first) {
+		p1 = edge1.first;
+		p2 = edge1.second;
+		p3 = edge2.second;
+	} else {
+		p1 = edge1.first;
+		p2 = edge1.second;
+		p3 = edge2.first;
+	}
+
+	glm::vec3 new_pt = points[p1] + points[p3] - points[p2];
+	if (!snapPoint(new_pt, 2.0f, p4)) {
+		p4 = points.size();
+		points.push_back(points[p1] + points[p3] - points[p2]);
+	}
+
+	if (std::find(edges.begin(), edges.end(), std::make_pair(p1, p4)) == edges.end()
+		&& std::find(new_edges.begin(), new_edges.end(), std::make_pair(p1, p4)) == new_edges.end()) {
+		new_edges.push_back(std::make_pair(p1, p4));
+	}
+	if (std::find(edges.begin(), edges.end(), std::make_pair(p3, p4)) == edges.end()
+		&& std::find(new_edges.begin(), new_edges.end(), std::make_pair(p3, p4)) == new_edges.end()) {
+		new_edges.push_back(std::make_pair(p3, p4));
+	}
+
+	faces.push_back(Face(p1, p2, p3, p4));
+}
+
+bool PointList::hitFace(const glm::vec3& p, const glm::vec3& v, const glm::mat4& mvpMatrix, int& index) {
+	glm::vec3 intPt;
+	float min_dist = (std::numeric_limits<float>::max)();
+	index = -1;
+
+	for (int i = 0; i < faces.size(); ++i) {
+		for (int k = 1; k < faces[i].points.size() - 1; ++k) {
+			if (glutils::rayTriangleIntersection(p, v, points[faces[i].points[0]], points[faces[i].points[k]], points[faces[i].points[k+1]], intPt)) {
+				float dist = glm::length(intPt - p);
+				if (dist < min_dist) {
+					index = i;
+				}
+			}
+		}
+	}
+
+	if (index >= 0) return true;
+	else return false;
+}
+
+void PointList::align(const glm::vec3& p1, glm::vec3& p2) {
+	if (fabs(p1.x - p2.x) < 2.0f) {
+		p2.x = p1.x;
+	}
+	if (fabs(p1.y - p2.y) < 2.0f) {
+		p2.y = p1.y;
+	}
+	if (fabs(p1.z - p2.z) < 2.0f) {
+		p2.z = p1.z;
+	}
+}
+
+void PointList::generate(RenderManager* renderManager) {
+	renderManager->removeObject("face");
+
+	std::vector<Vertex> vertices;
+	for (int i = 0; i < faces.size(); ++i) {
+		std::vector<glm::vec3> pts;
+		for (int k = 0; k < faces[i].points.size(); ++k) {
+			pts.push_back(points[faces[i].points[k]]);
+		}
+		glutils::drawPolygon(pts, glm::vec3(1, 1, 1), glm::mat4(), vertices);
+	}
+	renderManager->addObject("face", "", vertices);
+}
