@@ -1,6 +1,12 @@
 ﻿#include "PointCloud.h"
 #include "GLUtils.h"
 
+Face::Face(int p1, int p2, int p3) {
+	points.push_back(p1);
+	points.push_back(p2);
+	points.push_back(p3);
+}
+
 Face::Face(int p1, int p2, int p3, int p4) {
 	points.push_back(p1);
 	points.push_back(p2);
@@ -31,18 +37,85 @@ void PointList::addEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	new_edges.push_back(std::make_pair(e1, e2));
 
-	// if two edges are perpendicular and have a common vertex, then create a face!
 	for (int k = 0; k < new_edges.size(); ++k) {
 		for (int i = 0; i < edges.size(); ++i) {
-			glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
-			glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
-			if (glm::dot(v1, v2) < 0.2f) {
-				if (edges[i].first == new_edges[k].first
+			// 2つのエッジが直角なら、四角形のfaceを作成する。
+			if (edges[i].first == new_edges[k].first
 					|| edges[i].first == new_edges[k].second
 					|| edges[i].second == new_edges[k].first
 					|| edges[i].second == new_edges[k].second) {
+				glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
+				glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
+				//if (fabs(glm::dot(v1, v2)) < 0.2f) {
 					if (!isFace(edges[i], new_edges[k])) {
 						addFace(edges[i], new_edges[k], new_edges);
+						continue;
+					}
+				//}
+			}
+		}
+		edges.push_back(new_edges[k]);
+	}
+
+	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
+	new_edges.clear();
+}
+
+void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
+	int e1, e2;
+	if (!snapPoint(p1, 2.0f, e1)) {
+		e1 = points.size();
+		points.push_back(p1);
+	}
+	align(p1, p2);
+
+	if (!snapPoint(p2, 2.0f, e2)) {
+		e2 = points.size();
+		points.push_back(p2);
+	}
+
+	new_edges.push_back(std::make_pair(e1, e2));
+
+	for (int k = 0; k < new_edges.size(); ++k) {
+		for (int i = 0; i < edges.size(); ++i) {
+			// 2つのエッジが直角なら、四角形のfaceを作成する。
+			if (edges[i].first == new_edges[k].first
+					|| edges[i].first == new_edges[k].second
+					|| edges[i].second == new_edges[k].first
+					|| edges[i].second == new_edges[k].second) {
+				glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
+				glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
+				if (fabs(glm::dot(v1, v2)) < 0.1f) {
+					if (!isFace(edges[i], new_edges[k])) {
+						addFace(edges[i], new_edges[k], new_edges);
+						continue;
+					}
+				}
+			}
+
+			// 2つのエッジが1つの頂点を共有し、もう1つの頂点間にエッジが存在するなら、三角形ののfaceを作成する。
+			if (new_edges[k].first == edges[i].first) {
+				if (hasEdge(new_edges[k].second, edges[i].second)) {
+					if (!isFace(new_edges[k], edges[i])) {
+						faces.push_back(Face(new_edges[k].first, new_edges[k].second, edges[i].second));
+					}
+				}
+			} else if (new_edges[k].first == edges[i].second) {
+				if (hasEdge(new_edges[k].second, edges[i].first)) {
+					if (!isFace(new_edges[k], edges[i])) {
+						faces.push_back(Face(new_edges[k].first, new_edges[k].second, edges[i].first));
+					}
+				}
+			} else if (new_edges[k].second == edges[i].first) {
+				if (hasEdge(new_edges[k].first, edges[i].second)) {
+					if (!isFace(new_edges[k], edges[i])) {
+						faces.push_back(Face(new_edges[k].second, new_edges[k].first, edges[i].second));
+					}
+				}
+			} else if (new_edges[k].second == edges[i].second) {
+				if (hasEdge(new_edges[k].first, edges[i].first)) {
+					if (!isFace(new_edges[k], edges[i])) {
+						faces.push_back(Face(new_edges[k].second, new_edges[k].first, edges[i].first));
 					}
 				}
 			}
@@ -52,6 +125,16 @@ void PointList::addEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
 	new_edges.clear();
+}
+
+
+bool PointList::hasEdge(int p1, int p2) {
+	for (int i = 0; i < edges.size(); ++i) {
+		if ((edges[i].first == p1 && edges[i].second == p2)
+			|| (edges[i].second == p1 && edges[i].first == p2)) return true;
+	}
+
+	return false;
 }
 
 /**
@@ -81,6 +164,30 @@ bool PointList::snapPoint(glm::vec3& point, float threshold, int& index) {
 	}
 }
 
+bool PointList::snapPoint(glm::vec2& point, const glm::mat4& mvpMatrix, float threshold, glm::vec3& point3d, int& index) {
+	float min_dist = (std::numeric_limits<float>::max)();
+	for (int i = 0; i < points.size(); ++i) {
+		glm::vec4 projected_pt = mvpMatrix * glm::vec4(points[i], 1);
+		glm::vec2 p(projected_pt.x / projected_pt.w, projected_pt.y / projected_pt.w);
+
+		float dist = glm::length(p - point);
+		if (dist < min_dist) {
+			min_dist = dist;
+			index = i;
+		}
+	}
+
+	if (min_dist < threshold) {
+		point3d = points[index];
+		return true;
+	} else {
+		return false;
+	}
+}
+
+/**
+ * 指定された2つのエッジを含むfaceが既に存在するかチェックする。
+ */
 bool PointList::isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
 	for (int i = 0; i < faces.size(); ++i) {
 		if (faces[i].contain(edge1, edge2)) return true;

@@ -111,64 +111,53 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 
 	int e1, e2;
 	if (fabs(glm::dot(face_normal_projected, stroke_vec)) > 0.8f) { // vertical line
-		glm::vec3 p1 = unproject(stroke->points[0], face_points, face_normal);
+		glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
 		points.snapPoint(p1, 2.0f, e1);
-		glm::vec3 p2 = unproject(stroke->points.back(), p1, face_normal);
+		glm::vec3 p2 = unprojectByLine(stroke->points.back(), p1, face_normal);
 		points.snapPoint(p2, 2.0f, e2);
 		points.addEdge(p1, p2);
 	} else { // horizontal line
-		glm::vec3 p1 = unproject(stroke->points[0], face_points, face_normal);
-		glm::vec3 p2 = unproject(stroke->points.back(), face_points, face_normal);
-		points.addEdge(p1, p2);
-	}
-
-
-
-
-	/*
-	if (fabs(stroke->points[0].x - stroke->points.back().x) < 20) { // vertical line		
-		if (stroke->points[0].y > stroke->points.back().y) { // stroke->points[0]が地面にある
-			int e1, e2;
-			glm::vec3 p1 = unproject(stroke->points[0]);
-			points.snapPoint(p1, 2.0f, e1);
-			glm::vec3 p2 = unproject(stroke->points.back(), p1);
-			points.snapPoint(p2, 2.0f, e2);
+		if (isStraightLine(stroke)) {
+			glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
+			glm::vec3 p2 = unprojectByPlane(stroke->points.back(), face_points[0], face_normal);
 			points.addEdge(p1, p2);
-		} else { // stroke->points.back()が地面にある
-			int e1, e2;
-			glm::vec3 p2 = unproject(stroke->points.back());
-			points.snapPoint(p2, 2.0f, e2);
-			glm::vec3 p1 = unproject(stroke->points[0], p2);
-			points.snapPoint(p1, 2.0f, e1);
-			points.addEdge(p1, p2);
+		} else {
+			glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
+
+			glm::vec3 p1, p2;
+			int v1, v2;
+			if (points.snapPoint(normalizeScreenCoordinates(stroke->points[0]), camera.mvpMatrix, 5.0f, p1, v1)
+				&& points.snapPoint(normalizeScreenCoordinates(stroke->points.back()), camera.mvpMatrix, 5.0f, p2, v2)) {
+				glm::vec3 p12 = (p1 + p2) * 0.5f;
+				/*
+				glm::vec3 normal = glm::normalize(p2 - p1);
+				glm::vec3 p3 = unprojectByPlane(midPt, p12, normal);
+				*/
+				glm::vec3 p3 = unprojectByLine(midPt, p12, glm::vec3(0, 1, 0)); // デモ用
+				points.addTriangleEdge(p1, p3);
+				points.addTriangleEdge(p2, p3);
+			}
 		}
-	} else { // horizontal line
-		int e1, e2;
-		glm::vec3 p1 = unproject(stroke->points[0]);
-		glm::vec3 p2 = unproject(stroke->points.back());
-		//PointList::align(p1, p2);
-		points.addEdge(p1, p2);
 	}
-	*/
 
 	points.generate(&renderManager);
 }
 
-glm::vec3 GLWidget3D::unproject(const glm::vec2& point, const std::vector<glm::vec3>& face_points, const glm::vec3& face_normal) {
+glm::vec3 GLWidget3D::unprojectByPlane(const glm::vec2& point, const glm::vec3& face_point, const glm::vec3& face_normal) {
 	glm::vec3 cameraPos = camera.cameraPosInWorld();
 	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * camera.aspect(), (height() * 0.5f - point.y) * 2.0f / height(), -camera.f());
 	dir = glm::vec3(glm::inverse(camera.mvMatrix) * glm::vec4(dir, 0));
 
-	glm::vec3 intPt = glutils::rayPlaneIntersection(cameraPos, dir, face_points[0], face_normal);
+	glm::vec3 intPt = glutils::rayPlaneIntersection(cameraPos, dir, face_point, face_normal);
 	return intPt;
 }
 
-glm::vec3 GLWidget3D::unproject(const glm::vec2& point, const glm::vec3& reference_point, const glm::vec3& vec) {
+glm::vec3 GLWidget3D::unprojectByLine(const glm::vec2& point, const glm::vec3& reference_point, const glm::vec3& vec) {
 	glm::vec3 cameraPos = camera.cameraPosInWorld();
 	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * camera.aspect(), (height() * 0.5f - point.y) * 2.0f / height(), -camera.f());
 	dir = glm::vec3(glm::inverse(camera.mvMatrix) * glm::vec4(dir, 0));
 
-	glm::vec3 intPt = glutils::lineLineIntersection(cameraPos, dir, reference_point, vec);
+	glm::vec3 intPt = glutils::lineLineIntersection(cameraPos, dir, reference_point, vec, 0, 1);
 	return intPt;
 }
 
@@ -179,6 +168,20 @@ glm::vec2 GLWidget3D::normalizeScreenCoordinates(const glm::vec2& point) {
 glm::vec3 GLWidget3D::viewVector(const glm::vec2& point, const glm::mat4& mvMatrix, float focalLength, float aspect) {
 	glm::vec3 dir((point.x - width() * 0.5f) * 2.0f / width() * aspect, (height() * 0.5f - point.y) * 2.0f / height(), -focalLength);
 	return glm::vec3(glm::inverse(mvMatrix) * glm::vec4(dir, 0));
+}
+
+bool GLWidget3D::isStraightLine(Stroke* stroke) {
+	glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
+	
+	glm::vec2 vec1 = glm::normalize(stroke->points.back() - stroke->points[0]);
+	glm::vec2 vec2 = glm::normalize(midPt - stroke->points[0]);
+	if (glm::dot(vec1, vec2) > 0.95f) {
+		std::cout << "Straight line" << std::endl;
+		return true;
+	} else {
+		std::cout << "Not Straight line" << std::endl;
+		return false;
+	}
 }
 
 void GLWidget3D::resizeGL(int width, int height) {
