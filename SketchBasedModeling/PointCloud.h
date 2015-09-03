@@ -27,7 +27,7 @@ public:
 
 public:
 	PointList() {}
-	void addEdge(glm::vec3& p1, glm::vec3& p2);
+	void addQuadEdge(glm::vec3& p1, glm::vec3& p2);
 	void addTriangleEdge(glm::vec3& p1, glm::vec3& p2);
 	bool hasEdge(int p1, int p2);
 	bool snapPoint(glm::vec3& point, float threshold, int& index);

@@ -22,7 +22,7 @@ bool Face::contain(const std::pair<int, int>& edge1, const std::pair<int, int>& 
 	return true;
 }
 
-void PointList::addEdge(glm::vec3& p1, glm::vec3& p2) {
+void PointList::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
 	if (!snapPoint(p1, 2.0f, e1)) {
 		e1 = points.size();

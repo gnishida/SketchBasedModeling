@@ -32,7 +32,6 @@ public:
 	bool ctrlPressed;
 	QPoint lastPoint;
 	std::vector<Stroke> strokes;
-	std::vector<Stroke> non_axis_aligned_strokes;
 	Stroke* currentStroke;
 	PointList points;
 	std::vector<std::pair<int, int> > edges;

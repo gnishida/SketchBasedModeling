@@ -115,12 +115,12 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 		points.snapPoint(p1, 2.0f, e1);
 		glm::vec3 p2 = unprojectByLine(stroke->points.back(), p1, face_normal);
 		points.snapPoint(p2, 2.0f, e2);
-		points.addEdge(p1, p2);
+		points.addQuadEdge(p1, p2);
 	} else { // horizontal line
 		if (isStraightLine(stroke)) {
 			glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
 			glm::vec3 p2 = unprojectByPlane(stroke->points.back(), face_points[0], face_normal);
-			points.addEdge(p1, p2);
+			points.addQuadEdge(p1, p2);
 		} else {
 			glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
 
@@ -133,7 +133,7 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 				glm::vec3 normal = glm::normalize(p2 - p1);
 				glm::vec3 p3 = unprojectByPlane(midPt, p12, normal);
 				*/
-				glm::vec3 p3 = unprojectByLine(midPt, p12, glm::vec3(0, 1, 0)); // デモ用
+				glm::vec3 p3 = unprojectByLine(midPt, p12, glm::vec3(0, 1, 0)); // デモ用に、垂直方向の三角形のみ対応
 				points.addTriangleEdge(p1, p3);
 				points.addTriangleEdge(p2, p3);
 			}
