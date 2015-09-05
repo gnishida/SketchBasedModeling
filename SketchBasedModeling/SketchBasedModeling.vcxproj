@@ -127,10 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\codebase\GLUtils.cpp" />
-    <ClCompile Include="..\..\codebase\RenderManager.cpp" />
-    <ClCompile Include="..\..\codebase\Shader.cpp" />
-    <ClCompile Include="..\..\codebase\ShadowMapping.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="GeneratedFiles\Debug\moc_GLWidget3D.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
@@ -158,10 +154,14 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="GLUtils.cpp" />
     <ClCompile Include="GLWidget3D.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainWindow.cpp" />
     <ClCompile Include="PointCloud.cpp" />
+    <ClCompile Include="RenderManager.cpp" />
+    <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="SketchyRenderingBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="MainWindow.h">
@@ -205,14 +205,14 @@
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\codebase\GLUtils.h" />
-    <ClInclude Include="..\..\codebase\RenderManager.h" />
-    <ClInclude Include="..\..\codebase\Shader.h" />
-    <ClInclude Include="..\..\codebase\ShadowMapping.h" />
-    <ClInclude Include="..\..\codebase\Vertex.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h" />
+    <ClInclude Include="GLUtils.h" />
     <ClInclude Include="PointCloud.h" />
+    <ClInclude Include="RenderManager.h" />
+    <ClInclude Include="Shader.h" />
+    <ClInclude Include="SketchyRenderingBuffer.h" />
+    <ClInclude Include="Vertex.h" />
     <CustomBuild Include="GLWidget3D.h">
       <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(QTDIR)\bin\moc.exe;%(FullPath)</AdditionalInputs>
       <Message Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Moc%27ing GLWidget3D.h...</Message>
@@ -255,7 +255,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shaders\fragment.glsl" />
-    <None Include="..\shaders\geometry.glsl" />
     <None Include="..\shaders\vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

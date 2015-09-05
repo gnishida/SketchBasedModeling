@@ -3,9 +3,6 @@
 layout(triangles) in;
 layout(triangle_strip, max_vertices = 3) out;
 
-//#extension GL_EXT_gpu_shader4 : enable
-//#extension GL_EXT_geometry_shader4 : enable
-
 in vec3 vPosition[3];
 in vec3 vNormal[3];
 in vec3 vColor[3];
@@ -17,8 +14,7 @@ out vec3 fTexCoord;
 //uniform vec2 WIN_SCALE;
 noperspective out vec3 dist;
 
-void main(void)
-{
+void main() {
 	vec2 WIN_SCALE = vec2(600, 600);
 
 	// taken from 'Single-Pass Wireframe Rendering'

@@ -2,6 +2,7 @@
 #define GLWIDGET_H
 
 #include "RenderManager.h"
+#include "SketchyRenderingBuffer.h"
 #include <QPen>
 #include <QGLWidget>
 #include <QtGui>
@@ -28,6 +29,7 @@ public:
 	glm::vec3 light_dir;
 	glm::mat4 light_mvpMatrix;
 	RenderManager renderManager;
+	SketchyRenderingBuffer rb;
 
 	bool ctrlPressed;
 	QPoint lastPoint;

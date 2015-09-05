@@ -192,6 +192,8 @@ void GLWidget3D::resizeGL(int width, int height) {
 	height = height ? height : 1;
 	glViewport(0, 0, width, height);
 	camera.updatePMatrix(width, height);
+
+	rb.update(width, height);
 }
 
 void GLWidget3D::mousePressEvent(QMouseEvent *e) {
@@ -235,20 +237,16 @@ void GLWidget3D::mouseMoveEvent(QMouseEvent *e) {
 }
 
 void GLWidget3D::initializeGL() {
-	renderManager.init("../shaders/vertex.glsl", "../shaders/geometry.glsl", "../shaders/fragment.glsl", 4096);
+	renderManager.init("../shaders/vertex.glsl", "", "../shaders/fragment.glsl");
+	rb.init(renderManager.program, 4, 5, width(), height());
 
 	// 光源位置をセット
 	// ShadowMappingは平行光源を使っている。この位置から原点方向を平行光源の方向とする。
 	light_dir = glm::normalize(glm::vec3(-0.1, -0.2, -1));
 
-	// set the clear color for the screen
-	qglClearColor(QColor(224, 224, 224));
-
 	std::vector<Vertex> vertices;
-	glutils::drawAxes(1, 20, glm::mat4(), vertices);
-	renderManager.addObject("axis", "", vertices);
-	vertices.clear();
-	glutils::drawGrid(200, 200, 10, glm::vec3(0.3, 0.6, 0.8), glm::vec3(1, 1, 1), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
+	glutils::drawQuad(200, 200, glm::vec3(0.3, 0.6, 0.8), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
+	//glutils::drawGrid(200, 200, 10, glm::vec3(0.3, 0.6, 0.8), glm::vec3(1, 1, 1), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
 	renderManager.addObject("grid", "", vertices);
 
 	currentStroke = NULL;
@@ -262,10 +260,8 @@ void GLWidget3D::paintEvent(QPaintEvent *event) {
 	glPushMatrix();
 
 	glUseProgram(renderManager.program);
-	renderManager.updateShadowMap(this, light_dir, light_mvpMatrix);
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
 	glEnable(GL_DEPTH_TEST);
 	glDisable(GL_TEXTURE_2D);
 
@@ -276,6 +272,9 @@ void GLWidget3D::paintEvent(QPaintEvent *event) {
 	// pass the light direction to the shader
 	glUniform1fv(glGetUniformLocation(renderManager.program, "lightDir"), 3, &light_dir[0]);
 	
+	rb.pass1();
+	drawScene(0);
+	rb.pass2();
 	drawScene(0);
 
 	// OpenGLの設定を元に戻す

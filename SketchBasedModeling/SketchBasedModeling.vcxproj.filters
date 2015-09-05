@@ -33,9 +33,6 @@
       <Extensions>cpp;moc</Extensions>
       <SourceControlFiles>False</SourceControlFiles>
     </Filter>
-    <Filter Include="Source Files\codebase">
-      <UniqueIdentifier>{d21cc52f-b157-4a81-825d-f399ee20f691}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\shaders">
       <UniqueIdentifier>{16221b19-d39d-4606-86a3-5de8fbeda146}</UniqueIdentifier>
     </Filter>
@@ -68,19 +65,19 @@
     <ClCompile Include="GeneratedFiles\Release\moc_GLWidget3D.cpp">
       <Filter>Generated Files\Release</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\codebase\GLUtils.cpp">
-      <Filter>Source Files\codebase</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\codebase\RenderManager.cpp">
-      <Filter>Source Files\codebase</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\codebase\Shader.cpp">
-      <Filter>Source Files\codebase</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\codebase\ShadowMapping.cpp">
-      <Filter>Source Files\codebase</Filter>
-    </ClCompile>
     <ClCompile Include="PointCloud.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SketchyRenderingBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="GLUtils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -102,33 +99,30 @@
     <ClInclude Include="GeneratedFiles\ui_MainWindow.h">
       <Filter>Generated Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\codebase\GLUtils.h">
-      <Filter>Source Files\codebase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\codebase\RenderManager.h">
-      <Filter>Source Files\codebase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\codebase\Shader.h">
-      <Filter>Source Files\codebase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\codebase\ShadowMapping.h">
-      <Filter>Source Files\codebase</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\codebase\Vertex.h">
-      <Filter>Source Files\codebase</Filter>
-    </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PointCloud.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderManager.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SketchyRenderingBuffer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Vertex.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GLUtils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\shaders\fragment.glsl">
-      <Filter>Source Files\shaders</Filter>
-    </None>
-    <None Include="..\shaders\geometry.glsl">
       <Filter>Source Files\shaders</Filter>
     </None>
     <None Include="..\shaders\vertex.glsl">
