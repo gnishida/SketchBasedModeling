@@ -22,7 +22,7 @@ protected:
 
 public slots:
 	void onNewSketch();
-	//void onSaveImage();
+	void onSaveImage();
 	void onLoadCamera();
 	void onSaveCamera();
 	void onResetCamera();

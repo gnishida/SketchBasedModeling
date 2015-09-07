@@ -8,7 +8,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, 
 
 	// メニューハンドラ
 	connect(ui.actionNewSketch, SIGNAL(triggered()), this, SLOT(onNewSketch()));
-	//connect(ui.actionSaveImage, SIGNAL(triggered()), this, SLOT(onSaveImage()));
+	connect(ui.actionSaveImage, SIGNAL(triggered()), this, SLOT(onSaveImage()));
 	connect(ui.actionLoadCamera, SIGNAL(triggered()), this, SLOT(onLoadCamera()));
 	connect(ui.actionSaveCamera, SIGNAL(triggered()), this, SLOT(onSaveCamera()));
 	connect(ui.actionResetCamera, SIGNAL(triggered()), this, SLOT(onResetCamera()));
@@ -31,13 +31,12 @@ void MainWindow::onNewSketch() {
 	glWidget->update();
 }
 
-/*
 void MainWindow::onSaveImage() {
-	if (!QDir("screenshots").exists()) QDir().mkdir("screenshots");
-	QString fileName = "screenshots/" + QDate::currentDate().toString("yyMMdd") + "_" + QTime::currentTime().toString("HHmmss") + ".png";
-	glWidget->grabFrameBuffer().save(fileName);
-	printf("Save %s\n",fileName.toAscii().constData());
-}*/
+	QString	filename = QFileDialog::getSaveFileName(this, tr("Save image..."), "", tr("Image Files (*.png)"));
+	if (filename.isEmpty()) return;
+
+	printf("Save %s\n",filename.toUtf8().constData());
+}
 
 void MainWindow::onLoadCamera() {
 	QString filename = QFileDialog::getOpenFileName(this, tr("Open camera file..."), "", tr("Camera Files (*.cam)"));
