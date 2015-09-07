@@ -68,7 +68,7 @@ void GLWidget3D::resizeSketch(int width, int height) {
 	}*/
 }
 
-void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
+bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 	int face_index;
 	std::vector<glm::vec3> face_points;	
 
@@ -104,7 +104,7 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 	glm::vec4 face_center_projected = camera.mvpMatrix * glm::vec4(face_center, 1);
 	glm::vec4 face_above_projected = camera.mvpMatrix * glm::vec4(face_above, 1);
 	glm::vec2 face_normal_projected = glm::normalize(glm::vec2(face_above_projected.x / face_above_projected.w - face_center_projected.x / face_center_projected.w,
-		face_above_projected.y / face_above_projected.w - face_center_projected.y / face_center_projected.w));
+		face_center_projected.y / face_center_projected.w - face_above_projected.y / face_above_projected.w));
 
 	// strokeのベクトル
 	glm::vec2 stroke_vec = glm::normalize(stroke->points[0] - stroke->points.back());
@@ -115,12 +115,16 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 		points.snapPoint(p1, 2.0f, e1);
 		glm::vec3 p2 = unprojectByLine(stroke->points.back(), p1, face_normal);
 		points.snapPoint(p2, 2.0f, e2);
-		points.addQuadEdge(p1, p2);
+		if (points.addQuadEdge(p1, p2)) {
+			return true;
+		}
 	} else { // horizontal line
 		if (isStraightLine(stroke)) {
 			glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
 			glm::vec3 p2 = unprojectByPlane(stroke->points.back(), face_points[0], face_normal);
-			points.addQuadEdge(p1, p2);
+			if (points.addQuadEdge(p1, p2)) {
+				return true;
+			}
 		} else {
 			glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
 
@@ -134,13 +138,16 @@ void GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 				glm::vec3 p3 = unprojectByPlane(midPt, p12, normal);
 				*/
 				glm::vec3 p3 = unprojectByLine(midPt, p12, glm::vec3(0, 1, 0)); // デモ用に、垂直方向の三角形のみ対応
-				points.addTriangleEdge(p1, p3);
-				points.addTriangleEdge(p2, p3);
+				bool faceAdded1 = points.addTriangleEdge(p1, p3);
+				bool faceAdded2 = points.addTriangleEdge(p2, p3);
+				if (faceAdded1 || faceAdded2) {
+					return true;
+				}
 			}
 		}
 	}
 
-	points.generate(&renderManager);
+	return false;
 }
 
 glm::vec3 GLWidget3D::unprojectByPlane(const glm::vec2& point, const glm::vec3& face_point, const glm::vec3& face_normal) {
@@ -184,6 +191,17 @@ bool GLWidget3D::isStraightLine(Stroke* stroke) {
 	}
 }
 
+void GLWidget3D::clear() {
+	points.clear();
+	strokes.clear();
+	if (currentStroke != NULL) {
+		delete currentStroke;
+		currentStroke = NULL;
+	}
+
+	points.generate(&renderManager);
+}
+
 void GLWidget3D::resizeGL(int width, int height) {
 	// sketch imageを更新
 	resizeSketch(width, height);
@@ -210,9 +228,15 @@ void GLWidget3D::mousePressEvent(QMouseEvent *e) {
 void GLWidget3D::mouseReleaseEvent(QMouseEvent *e) {
 	if (currentStroke != NULL) {
 		// compute 3d coordinates of user stroke
-		compute3dCoordinates(currentStroke);
+		bool faceAdded = compute3dCoordinates(currentStroke);
 
-		strokes.push_back(*currentStroke);
+		if (faceAdded) {
+			strokes.clear();
+			points.generate(&renderManager);
+		} else {
+			strokes.push_back(*currentStroke);
+		}
+
 		delete currentStroke;
 		currentStroke = NULL;
 	}

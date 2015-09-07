@@ -22,7 +22,18 @@ bool Face::contain(const std::pair<int, int>& edge1, const std::pair<int, int>& 
 	return true;
 }
 
-void PointList::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
+void PointCloud::clear() {
+	points.clear();
+	edges.clear();
+	new_edges.clear();
+	faces.clear();
+}
+
+/**
+ * 四角形の一辺となるエッジを追加する。
+ * もし面が追加されたら、trueを返却する。
+ */
+bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
 	if (!snapPoint(p1, 2.0f, e1)) {
 		e1 = points.size();
@@ -37,6 +48,7 @@ void PointList::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	new_edges.push_back(std::make_pair(e1, e2));
 
+	bool faceAdded = false;
 	for (int k = 0; k < new_edges.size(); ++k) {
 		for (int i = 0; i < edges.size(); ++i) {
 			// 2つのエッジが直角なら、四角形のfaceを作成する。
@@ -49,6 +61,7 @@ void PointList::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 				//if (fabs(glm::dot(v1, v2)) < 0.2f) {
 					if (!isFace(edges[i], new_edges[k])) {
 						addFace(edges[i], new_edges[k], new_edges);
+						faceAdded = true;
 						continue;
 					}
 				//}
@@ -59,9 +72,11 @@ void PointList::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
 	new_edges.clear();
+
+	return faceAdded;
 }
 
-void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
+bool PointCloud::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
 	if (!snapPoint(p1, 2.0f, e1)) {
 		e1 = points.size();
@@ -76,6 +91,7 @@ void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	new_edges.push_back(std::make_pair(e1, e2));
 
+	bool faceAdded = false;
 	for (int k = 0; k < new_edges.size(); ++k) {
 		for (int i = 0; i < edges.size(); ++i) {
 			// 2つのエッジが直角なら、四角形のfaceを作成する。
@@ -88,6 +104,7 @@ void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 				if (fabs(glm::dot(v1, v2)) < 0.1f) {
 					if (!isFace(edges[i], new_edges[k])) {
 						addFace(edges[i], new_edges[k], new_edges);
+						faceAdded = true;
 						continue;
 					}
 				}
@@ -98,24 +115,28 @@ void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 				if (hasEdge(new_edges[k].second, edges[i].second)) {
 					if (!isFace(new_edges[k], edges[i])) {
 						faces.push_back(Face(new_edges[k].first, new_edges[k].second, edges[i].second));
+						faceAdded = true;
 					}
 				}
 			} else if (new_edges[k].first == edges[i].second) {
 				if (hasEdge(new_edges[k].second, edges[i].first)) {
 					if (!isFace(new_edges[k], edges[i])) {
 						faces.push_back(Face(new_edges[k].first, new_edges[k].second, edges[i].first));
+						faceAdded = true;
 					}
 				}
 			} else if (new_edges[k].second == edges[i].first) {
 				if (hasEdge(new_edges[k].first, edges[i].second)) {
 					if (!isFace(new_edges[k], edges[i])) {
 						faces.push_back(Face(new_edges[k].second, new_edges[k].first, edges[i].second));
+						faceAdded = true;
 					}
 				}
 			} else if (new_edges[k].second == edges[i].second) {
 				if (hasEdge(new_edges[k].first, edges[i].first)) {
 					if (!isFace(new_edges[k], edges[i])) {
 						faces.push_back(Face(new_edges[k].second, new_edges[k].first, edges[i].first));
+						faceAdded = true;
 					}
 				}
 			}
@@ -125,10 +146,12 @@ void PointList::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 
 	//edges.insert(edges.end(), new_edges.begin(), new_edges.end());
 	new_edges.clear();
+
+	return faceAdded;
 }
 
 
-bool PointList::hasEdge(int p1, int p2) {
+bool PointCloud::hasEdge(int p1, int p2) {
 	for (int i = 0; i < edges.size(); ++i) {
 		if ((edges[i].first == p1 && edges[i].second == p2)
 			|| (edges[i].second == p1 && edges[i].first == p2)) return true;
@@ -145,7 +168,7 @@ bool PointList::hasEdge(int p1, int p2) {
  * @param index		snap先の点のindex
  * @return			snapしたらtrueを返却する
  */
-bool PointList::snapPoint(glm::vec3& point, float threshold, int& index) {
+bool PointCloud::snapPoint(glm::vec3& point, float threshold, int& index) {
 	float min_dist = (std::numeric_limits<float>::max)();
 
 	for (int i = 0; i < points.size(); ++i) {
@@ -164,7 +187,7 @@ bool PointList::snapPoint(glm::vec3& point, float threshold, int& index) {
 	}
 }
 
-bool PointList::snapPoint(glm::vec2& point, const glm::mat4& mvpMatrix, float threshold, glm::vec3& point3d, int& index) {
+bool PointCloud::snapPoint(glm::vec2& point, const glm::mat4& mvpMatrix, float threshold, glm::vec3& point3d, int& index) {
 	float min_dist = (std::numeric_limits<float>::max)();
 	for (int i = 0; i < points.size(); ++i) {
 		glm::vec4 projected_pt = mvpMatrix * glm::vec4(points[i], 1);
@@ -188,7 +211,7 @@ bool PointList::snapPoint(glm::vec2& point, const glm::mat4& mvpMatrix, float th
 /**
  * 指定された2つのエッジを含むfaceが既に存在するかチェックする。
  */
-bool PointList::isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
+bool PointCloud::isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2) {
 	for (int i = 0; i < faces.size(); ++i) {
 		if (faces[i].contain(edge1, edge2)) return true;
 	}
@@ -196,7 +219,7 @@ bool PointList::isFace(const std::pair<int, int>& edge1, const std::pair<int, in
 	return false;
 }
 
-void PointList::addFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2, std::vector<std::pair<int, int> >& new_edges) {
+void PointCloud::addFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2, std::vector<std::pair<int, int> >& new_edges) {
 	//glm::vec3 p1, p2, p3, p4;
 	int p1, p2, p3, p4;
 
@@ -236,7 +259,7 @@ void PointList::addFace(const std::pair<int, int>& edge1, const std::pair<int, i
 	faces.push_back(Face(p1, p2, p3, p4));
 }
 
-bool PointList::hitFace(const glm::vec3& p, const glm::vec3& v, const glm::mat4& mvpMatrix, int& index) {
+bool PointCloud::hitFace(const glm::vec3& p, const glm::vec3& v, const glm::mat4& mvpMatrix, int& index) {
 	glm::vec3 intPt;
 	float min_dist = (std::numeric_limits<float>::max)();
 	index = -1;
@@ -256,19 +279,25 @@ bool PointList::hitFace(const glm::vec3& p, const glm::vec3& v, const glm::mat4&
 	else return false;
 }
 
-void PointList::align(const glm::vec3& p1, glm::vec3& p2) {
-	if (fabs(p1.x - p2.x) < 2.0f) {
+/**
+ * 点p2を、点p1との相対位置がaxis alignedに近い場合は、axis alignedになるよう揃える。
+ * さらに、点p2がgroundに近ければ、groundに揃える。
+ */
+void PointCloud::align(const glm::vec3& p1, glm::vec3& p2) {
+	if (fabs(p1.x - p2.x) <= 5.0f) {
 		p2.x = p1.x;
 	}
-	if (fabs(p1.y - p2.y) < 2.0f) {
+	if (fabs(p1.y - p2.y) <= 5.0f) {
 		p2.y = p1.y;
 	}
-	if (fabs(p1.z - p2.z) < 2.0f) {
+	if (fabs(p1.z - p2.z) <= 5.0f) {
 		p2.z = p1.z;
 	}
+
+	if (fabs(p2.y) <= 5.0f) p2.y = 0.0f;
 }
 
-void PointList::generate(RenderManager* renderManager) {
+void PointCloud::generate(RenderManager* renderManager) {
 	renderManager->removeObject("face");
 
 	std::vector<Vertex> vertices;

@@ -21,8 +21,8 @@ protected:
 	void keyReleaseEvent(QKeyEvent* e);
 
 public slots:
-	/*void onNewSketch();
-	void onSaveImage();*/
+	void onNewSketch();
+	//void onSaveImage();
 	void onLoadCamera();
 	void onSaveCamera();
 	void onResetCamera();

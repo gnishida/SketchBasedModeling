@@ -35,7 +35,7 @@ public:
 	QPoint lastPoint;
 	std::vector<Stroke> strokes;
 	Stroke* currentStroke;
-	PointList points;
+	PointCloud points;
 	std::vector<std::pair<int, int> > edges;
 
 public:
@@ -46,12 +46,13 @@ public:
 	void drawScene(int drawMode);
 	void drawLineTo(const QPoint &endPoint);
 	void resizeSketch(int width, int height);
-	void compute3dCoordinates(Stroke* stroke);
+	bool compute3dCoordinates(Stroke* stroke);
 	glm::vec3 unprojectByPlane(const glm::vec2& point, const glm::vec3& face_point, const glm::vec3& face_normal);
 	glm::vec3 unprojectByLine(const glm::vec2& point, const glm::vec3& reference_point, const glm::vec3& vec);
 	glm::vec2 normalizeScreenCoordinates(const glm::vec2& point);
 	glm::vec3 viewVector(const glm::vec2& point, const glm::mat4& mvMatrix, float focalLength, float aspect);
 	bool isStraightLine(Stroke* stroke);
+	void clear();
 
 protected:
 	void resizeGL(int width, int height);

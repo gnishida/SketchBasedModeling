@@ -7,8 +7,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags flags) : QMainWindow(parent, 
 	ui.setupUi(this);
 
 	// メニューハンドラ
-	/*connect(ui.actionNewSketch, SIGNAL(triggered()), this, SLOT(onNewSketch()));
-	connect(ui.actionSaveImage, SIGNAL(triggered()), this, SLOT(onSaveImage()));*/
+	connect(ui.actionNewSketch, SIGNAL(triggered()), this, SLOT(onNewSketch()));
+	//connect(ui.actionSaveImage, SIGNAL(triggered()), this, SLOT(onSaveImage()));
 	connect(ui.actionLoadCamera, SIGNAL(triggered()), this, SLOT(onLoadCamera()));
 	connect(ui.actionSaveCamera, SIGNAL(triggered()), this, SLOT(onSaveCamera()));
 	connect(ui.actionResetCamera, SIGNAL(triggered()), this, SLOT(onResetCamera()));
@@ -26,14 +26,12 @@ void MainWindow::keyReleaseEvent(QKeyEvent* e) {
 	glWidget->keyReleaseEvent(e);
 }
 
-/*
 void MainWindow::onNewSketch() {
-	for (int i = 0; i < parametriclsystem::NUM_LAYERS; ++i) {
-		glWidget->sketch[i].fill(qRgba(255, 255, 255, 0));
-	}
+	glWidget->clear();
 	glWidget->update();
 }
 
+/*
 void MainWindow::onSaveImage() {
 	if (!QDir("screenshots").exists()) QDir().mkdir("screenshots");
 	QString fileName = "screenshots/" + QDate::currentDate().toString("yyMMdd") + "_" + QTime::currentTime().toString("HHmmss") + ".png";
