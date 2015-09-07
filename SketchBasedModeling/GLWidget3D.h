@@ -52,6 +52,7 @@ public:
 	glm::vec2 normalizeScreenCoordinates(const glm::vec2& point);
 	glm::vec3 viewVector(const glm::vec2& point, const glm::mat4& mvMatrix, float focalLength, float aspect);
 	bool isStraightLine(Stroke* stroke);
+	glm::vec2 findTurningPoint(Stroke* stroke);
 	void clear();
 
 protected:

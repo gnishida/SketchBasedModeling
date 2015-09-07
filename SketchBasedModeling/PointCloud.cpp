@@ -35,13 +35,13 @@ void PointCloud::clear() {
  */
 bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
-	if (!snapPoint(p1, 2.0f, e1)) {
+	if (!snapPoint(p1, 5.0f, e1)) {
 		e1 = points.size();
 		points.push_back(p1);
 	}
 	align(p1, p2);
 
-	if (!snapPoint(p2, 2.0f, e2)) {
+	if (!snapPoint(p2, 5.0f, e2)) {
 		e2 = points.size();
 		points.push_back(p2);
 	}
@@ -78,13 +78,13 @@ bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 
 bool PointCloud::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
-	if (!snapPoint(p1, 2.0f, e1)) {
+	if (!snapPoint(p1, 5.0f, e1)) {
 		e1 = points.size();
 		points.push_back(p1);
 	}
 	align(p1, p2);
 
-	if (!snapPoint(p2, 2.0f, e2)) {
+	if (!snapPoint(p2, 5.0f, e2)) {
 		e2 = points.size();
 		points.push_back(p2);
 	}
@@ -242,7 +242,7 @@ void PointCloud::addFace(const std::pair<int, int>& edge1, const std::pair<int, 
 	}
 
 	glm::vec3 new_pt = points[p1] + points[p3] - points[p2];
-	if (!snapPoint(new_pt, 2.0f, p4)) {
+	if (!snapPoint(new_pt, 5.0f, p4)) {
 		p4 = points.size();
 		points.push_back(points[p1] + points[p3] - points[p2]);
 	}

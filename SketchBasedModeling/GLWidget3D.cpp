@@ -112,9 +112,9 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 	int e1, e2;
 	if (fabs(glm::dot(face_normal_projected, stroke_vec)) > 0.8f) { // vertical line
 		glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
-		points.snapPoint(p1, 2.0f, e1);
+		points.snapPoint(p1, 5.0f, e1);
 		glm::vec3 p2 = unprojectByLine(stroke->points.back(), p1, face_normal);
-		points.snapPoint(p2, 2.0f, e2);
+		points.snapPoint(p2, 5.0f, e2);
 		if (points.addQuadEdge(p1, p2)) {
 			return true;
 		}
@@ -126,7 +126,8 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 				return true;
 			}
 		} else {
-			glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
+			glm::vec2 midPt = findTurningPoint(stroke);
+			//glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
 
 			glm::vec3 p1, p2;
 			int v1, v2;
@@ -189,6 +190,26 @@ bool GLWidget3D::isStraightLine(Stroke* stroke) {
 		std::cout << "Not Straight line" << std::endl;
 		return false;
 	}
+}
+
+glm::vec2 GLWidget3D::findTurningPoint(Stroke* stroke) {
+	int index1 = stroke->points.size() * 0.3;
+	int index2 = stroke->points.size() * 0.7;
+	
+	glm::vec2 v = glm::normalize(stroke->points.back() - stroke->points[0]);
+
+	float min_dot = 1.0f;
+	int min_index = -1;
+
+	for (int i = index1; i < index2; ++i) {
+		float dot = fabs(glm::dot(glm::normalize(stroke->points[i] - stroke->points[0]), v));
+		if (dot < min_dot) {
+			min_dot = dot;
+			min_index = i;
+		}
+	}
+
+	return stroke->points[min_index];
 }
 
 void GLWidget3D::clear() {
