@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'MainWindow.ui'
 **
-** Created: Mon Sep 7 16:55:37 2015
+** Created: Mon Sep 7 16:58:16 2015
 **      by: Qt User Interface Compiler version 4.8.1
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -143,6 +143,7 @@ public:
         actionGreedyInverse->setText(QApplication::translate("MainWindowClass", "&Greedy Inverse", 0, QApplication::UnicodeUTF8));
         actionGreedyInverse->setShortcut(QApplication::translate("MainWindowClass", "Ctrl+I", 0, QApplication::UnicodeUTF8));
         actionSaveImage->setText(QApplication::translate("MainWindowClass", "Save Image", 0, QApplication::UnicodeUTF8));
+        actionSaveImage->setShortcut(QApplication::translate("MainWindowClass", "Ctrl+S", 0, QApplication::UnicodeUTF8));
         actionModeSketch->setText(QApplication::translate("MainWindowClass", "Sketch", 0, QApplication::UnicodeUTF8));
         actionMode3DView->setText(QApplication::translate("MainWindowClass", "3D View", 0, QApplication::UnicodeUTF8));
         actionRandomGeneration_2->setText(QApplication::translate("MainWindowClass", "Random Generation", 0, QApplication::UnicodeUTF8));
