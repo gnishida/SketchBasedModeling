@@ -1,5 +1,6 @@
 ﻿#include "PointCloud.h"
 #include "GLUtils.h"
+#include <iostream>
 
 Face::Face(int p1, int p2, int p3) {
 	points.push_back(p1);
@@ -36,14 +37,22 @@ void PointCloud::clear() {
 bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 	int e1, e2;
 	if (!snapPoint(p1, 5.0f, e1)) {
+		std::cout << "p1 " << glm::to_string(p1) << " does not snap" << std::endl;
 		e1 = points.size();
 		points.push_back(p1);
+	} else {
+		std::cout << "p1 snapped to " << e1 << std::endl;
 	}
+	std::cout << "P2 " << glm::to_string(p2) << std::endl;
 	align(p1, p2);
+	std::cout << "P2 " << glm::to_string(p2) << std::endl;
 
-	if (!snapPoint(p2, 5.0f, e2)) {
+	if (!snapPoint(p2, 5.0f, e1, e2)) {
+		std::cout << "p2 " << glm::to_string(p2) << " does not snap" << std::endl;
 		e2 = points.size();
 		points.push_back(p2);
+	} else {
+		std::cout << "p2 snapped to " << e2 << std::endl;
 	}
 
 	new_edges.push_back(std::make_pair(e1, e2));
@@ -56,10 +65,12 @@ bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 					|| edges[i].first == new_edges[k].second
 					|| edges[i].second == new_edges[k].first
 					|| edges[i].second == new_edges[k].second) {
+				std::cout << "new_edge " << new_edges[k].first << "," << new_edges[k].second << " - edge " << edges[i].first << "," << edges[i].second << std::endl;
 				glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
 				glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
 				//if (fabs(glm::dot(v1, v2)) < 0.2f) {
 					if (!isFace(edges[i], new_edges[k])) {
+						std::cout << "Add face" << std::endl;
 						addFace(edges[i], new_edges[k], new_edges);
 						faceAdded = true;
 						continue;
@@ -169,9 +180,15 @@ bool PointCloud::hasEdge(int p1, int p2) {
  * @return			snapしたらtrueを返却する
  */
 bool PointCloud::snapPoint(glm::vec3& point, float threshold, int& index) {
+	return snapPoint(point, threshold, -1, index);
+}
+
+bool PointCloud::snapPoint(glm::vec3& point, float threshold, int ignore_index, int& index) {
 	float min_dist = (std::numeric_limits<float>::max)();
 
 	for (int i = 0; i < points.size(); ++i) {
+		if (i == ignore_index) continue;
+
 		float dist = glm::length(points[i] - point);
 		if (dist < min_dist) {
 			min_dist = dist;
@@ -183,6 +200,7 @@ bool PointCloud::snapPoint(glm::vec3& point, float threshold, int& index) {
 		point = points[index];
 		return true;
 	} else {
+		index = -1;
 		return false;
 	}
 }
@@ -295,6 +313,35 @@ void PointCloud::align(const glm::vec3& p1, glm::vec3& p2) {
 	}
 
 	if (fabs(p2.y) <= 5.0f) p2.y = 0.0f;
+
+	/*
+	int max_diff_dimension = -1;
+	float max_diff = 0.0f;
+	if (fabs(p1.x - p2.x) > max_diff) {
+		max_diff = fabs(p1.x - p2.x);
+		max_diff_dimension = 0;
+	}
+	if (fabs(p1.y - p2.y) > max_diff) {
+		max_diff = fabs(p1.y - p2.y);
+		max_diff_dimension = 1;
+	}
+	if (fabs(p1.z - p2.z) > max_diff) {
+		max_diff = fabs(p1.z - p2.z);
+		max_diff_dimension = 2;
+	}
+
+	if (max_diff_dimension != 0 && fabs(p1.x - p2.x) <= 5.0f) {
+		p2.x = p1.x;
+	}
+	if (max_diff_dimension != 1 && fabs(p1.y - p2.y) <= 5.0f) {
+		p2.y = p1.y;
+	}
+	if (max_diff_dimension != 2 && fabs(p1.z - p2.z) <= 5.0f) {
+		p2.z = p1.z;
+	}
+
+	if (max_diff_dimension != 1 && fabs(p2.y) <= 5.0f) p2.y = 0.0f;
+	*/
 }
 
 void PointCloud::generate(RenderManager* renderManager) {

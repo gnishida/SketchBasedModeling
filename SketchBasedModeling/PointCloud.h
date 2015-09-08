@@ -32,6 +32,7 @@ public:
 	bool addTriangleEdge(glm::vec3& p1, glm::vec3& p2);
 	bool hasEdge(int p1, int p2);
 	bool snapPoint(glm::vec3& point, float threshold, int& index);
+	bool snapPoint(glm::vec3& point, float threshold, int ignore_index, int& index);
 	bool snapPoint(glm::vec2& point, const glm::mat4& mvpMatrix, float threshold, glm::vec3& point3d, int& index);
 	bool isFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2);
 	void addFace(const std::pair<int, int>& edge1, const std::pair<int, int>& edge2, std::vector<std::pair<int, int> >& new_edges);

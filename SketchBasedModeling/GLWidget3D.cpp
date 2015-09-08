@@ -78,11 +78,15 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 	// 視線ベクトル
 	glm::vec3 view_v1 = viewVector(stroke->points[0], camera.mvMatrix, camera.f(), camera.aspect());
 
+	std::cout << std::endl;
+
 	if (points.hitFace(cameraPos, view_v1, camera.mvpMatrix, face_index)) {
+		std::cout << "Hit face: " << face_index << std::endl;
 		for (int i = 0; i < points.faces[face_index].points.size(); ++i) {
 			face_points.push_back(points.points[points.faces[face_index].points[i]]);
 		}
 	} else {
+		std::cout << "No face hit." << std::endl;
 		face_points.push_back(glm::vec3(-1000, 0, -1000));
 		face_points.push_back(glm::vec3(-1000, 0, 1000));
 		face_points.push_back(glm::vec3(1000, 0, 1000));
@@ -109,16 +113,31 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 	// strokeのベクトル
 	glm::vec2 stroke_vec = glm::normalize(stroke->points[0] - stroke->points.back());
 
-	int e1, e2;
+	int e1 = -1;
+	int e2 = -1;
 	if (fabs(glm::dot(face_normal_projected, stroke_vec)) > 0.8f) { // vertical line
+		std::cout << "Vertical line." << std::endl;
 		glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
-		points.snapPoint(p1, 5.0f, e1);
+		std::cout << "Point " << glm::to_string(p1);
+		points.snapPoint(p1, 2.0f, e1);
+		if (e1 >= 0) {
+			std::cout << " snapped to " << e1 << std::endl;
+		} else {
+			std::cout << " not snap" << std::endl;
+		}
 		glm::vec3 p2 = unprojectByLine(stroke->points.back(), p1, face_normal);
-		points.snapPoint(p2, 5.0f, e2);
+		std::cout << "Point " << glm::to_string(p2);
+		points.snapPoint(p2, 2.0f, e2);
+		if (e2 >= 0) {
+			std::cout << " snapped to " << e2 << std::endl;
+		} else {
+			std::cout << " not snap" << std::endl;
+		}
 		if (points.addQuadEdge(p1, p2)) {
 			return true;
 		}
 	} else { // horizontal line
+		std::cout << "Non-vertical line." << std::endl;
 		if (isStraightLine(stroke)) {
 			glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
 			glm::vec3 p2 = unprojectByPlane(stroke->points.back(), face_points[0], face_normal);
@@ -127,12 +146,15 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 			}
 		} else {
 			glm::vec2 midPt = findTurningPoint(stroke);
-			//glm::vec2 midPt = stroke->points[stroke->points.size() * 0.5];
 
 			glm::vec3 p1, p2;
-			int v1, v2;
-			if (points.snapPoint(normalizeScreenCoordinates(stroke->points[0]), camera.mvpMatrix, 5.0f, p1, v1)
-				&& points.snapPoint(normalizeScreenCoordinates(stroke->points.back()), camera.mvpMatrix, 5.0f, p2, v2)) {
+			int v1 = -1;
+			int v2 = -1;
+			points.snapPoint(normalizeScreenCoordinates(stroke->points[0]), camera.mvpMatrix, 5.0f, p1, v1);
+			points.snapPoint(normalizeScreenCoordinates(stroke->points.back()), camera.mvpMatrix, 5.0f, p2, v2);
+			std::cout << "p1 snapped to " << v1 << std::endl;
+			std::cout << "p2 snapped to " << v2 << std::endl;
+			if (v1 >= 0 && v2 >= 0) {
 				glm::vec3 p12 = (p1 + p2) * 0.5f;
 				/*
 				glm::vec3 normal = glm::normalize(p2 - p1);
@@ -147,7 +169,7 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 			}
 		}
 	}
-
+	
 	return false;
 }
 
@@ -248,14 +270,16 @@ void GLWidget3D::mousePressEvent(QMouseEvent *e) {
 
 void GLWidget3D::mouseReleaseEvent(QMouseEvent *e) {
 	if (currentStroke != NULL) {
-		// compute 3d coordinates of user stroke
-		bool faceAdded = compute3dCoordinates(currentStroke);
+		if (currentStroke->points.size() > 3 && glm::length(currentStroke->points.back() - currentStroke->points[0]) > 10) {
+			// compute 3d coordinates of user stroke
+			bool faceAdded = compute3dCoordinates(currentStroke);
 
-		if (faceAdded) {
-			strokes.clear();
-			points.generate(&renderManager);
-		} else {
-			strokes.push_back(*currentStroke);
+			if (faceAdded) {
+				strokes.clear();
+				points.generate(&renderManager);
+			} else {
+				strokes.push_back(*currentStroke);
+			}
 		}
 
 		delete currentStroke;
@@ -290,7 +314,9 @@ void GLWidget3D::initializeGL() {
 	light_dir = glm::normalize(glm::vec3(-0.1, -0.2, -1));
 
 	std::vector<Vertex> vertices;
-	glutils::drawQuad(200, 200, glm::vec3(0.3, 0.6, 0.8), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
+	glm::mat4 mat = glm::translate(glm::mat4(), glm::vec3(0, -1, 0));
+	mat = glm::rotate(mat, (float)(M_PI * 0.5f), glm::vec3(1, 0, 0));
+	glutils::drawQuad(200, 200, glm::vec3(0.3, 0.6, 0.8), mat, vertices);
 	//glutils::drawGrid(200, 200, 10, glm::vec3(0.3, 0.6, 0.8), glm::vec3(1, 1, 1), glm::rotate(glm::mat4(), (float)(M_PI * 0.5f), glm::vec3(1, 0, 0)), vertices);
 	renderManager.addObject("grid", "", vertices);
 
