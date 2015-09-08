@@ -32,10 +32,10 @@ void MainWindow::onNewSketch() {
 }
 
 void MainWindow::onSaveImage() {
-	QString	filename = QFileDialog::getSaveFileName(this, tr("Save image..."), "", tr("Image Files (*.png)"));
-	if (filename.isEmpty()) return;
-
-	printf("Save %s\n",filename.toUtf8().constData());
+	if (!QDir("screenshots").exists()) QDir().mkdir("screenshots");
+	QString fileName = "screenshots/" + QDate::currentDate().toString("yyMMdd") + "_" + QTime::currentTime().toString("HHmmss") + ".png";
+	glWidget->grabFrameBuffer().save(fileName);
+	printf("Save %s\n", fileName.toAscii().constData());
 }
 
 void MainWindow::onLoadCamera() {
