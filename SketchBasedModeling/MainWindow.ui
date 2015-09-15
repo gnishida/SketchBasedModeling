@@ -182,6 +182,9 @@
    <property name="text">
     <string>Reset Camera</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
   </action>
   <action name="actionOptions">
    <property name="text">

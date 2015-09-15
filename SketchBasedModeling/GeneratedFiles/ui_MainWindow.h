@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'MainWindow.ui'
 **
-** Created: Tue Sep 8 10:36:30 2015
+** Created: Tue Sep 15 12:39:07 2015
 **      by: Qt User Interface Compiler version 4.8.2
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -163,6 +163,7 @@ public:
         actionLoadCamera->setText(QApplication::translate("MainWindowClass", "Load Camera", 0, QApplication::UnicodeUTF8));
         actionSaveCamera->setText(QApplication::translate("MainWindowClass", "Save Camera", 0, QApplication::UnicodeUTF8));
         actionResetCamera->setText(QApplication::translate("MainWindowClass", "Reset Camera", 0, QApplication::UnicodeUTF8));
+        actionResetCamera->setShortcut(QApplication::translate("MainWindowClass", "Ctrl+R", 0, QApplication::UnicodeUTF8));
         actionOptions->setText(QApplication::translate("MainWindowClass", "Options", 0, QApplication::UnicodeUTF8));
         menuFile->setTitle(QApplication::translate("MainWindowClass", "&File", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
