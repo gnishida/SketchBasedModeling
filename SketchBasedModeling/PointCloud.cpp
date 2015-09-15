@@ -68,14 +68,14 @@ bool PointCloud::addQuadEdge(glm::vec3& p1, glm::vec3& p2) {
 				std::cout << "new_edge " << new_edges[k].first << "," << new_edges[k].second << " - edge " << edges[i].first << "," << edges[i].second << std::endl;
 				glm::vec3 v1 = glm::normalize(points[new_edges[k].first] - points[new_edges[k].second]);
 				glm::vec3 v2 = glm::normalize(points[edges[i].first] - points[edges[i].second]);
-				//if (fabs(glm::dot(v1, v2)) < 0.2f) {
+				if (fabs(glm::dot(v1, v2)) < 0.5f) {
 					if (!isFace(edges[i], new_edges[k])) {
 						std::cout << "Add face" << std::endl;
 						addFace(edges[i], new_edges[k], new_edges);
 						faceAdded = true;
 						continue;
 					}
-				//}
+				}
 			}
 		}
 		edges.push_back(new_edges[k]);
@@ -93,7 +93,7 @@ bool PointCloud::addTriangleEdge(glm::vec3& p1, glm::vec3& p2) {
 		e1 = points.size();
 		points.push_back(p1);
 	}
-	align(p1, p2);
+	//align(p1, p2);
 
 	if (!snapPoint(p2, 5.0f, e2)) {
 		e2 = points.size();
@@ -302,17 +302,17 @@ bool PointCloud::hitFace(const glm::vec3& p, const glm::vec3& v, const glm::mat4
  * さらに、点p2がgroundに近ければ、groundに揃える。
  */
 void PointCloud::align(const glm::vec3& p1, glm::vec3& p2) {
-	if (fabs(p1.x - p2.x) <= 5.0f) {
+	if (fabs(p1.x - p2.x) < fabs(p1.y - p2.y) || fabs(p1.x - p2.x) < fabs(p1.z - p2.z)) {
 		p2.x = p1.x;
 	}
-	if (fabs(p1.y - p2.y) <= 5.0f) {
+
+	if (fabs(p1.y - p2.y) < fabs(p1.x - p2.x) || fabs(p1.y - p2.y) < fabs(p1.z - p2.z)) {
 		p2.y = p1.y;
 	}
-	if (fabs(p1.z - p2.z) <= 5.0f) {
+
+	if (fabs(p1.z - p2.z) < fabs(p1.x - p2.x) || fabs(p1.z - p2.z) < fabs(p1.y - p2.y)) {
 		p2.z = p1.z;
 	}
-
-	if (fabs(p2.y) <= 5.0f) p2.y = 0.0f;
 
 	/*
 	int max_diff_dimension = -1;

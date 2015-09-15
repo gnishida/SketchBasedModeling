@@ -119,7 +119,7 @@ bool GLWidget3D::compute3dCoordinates(Stroke* stroke) {
 		std::cout << "Vertical line." << std::endl;
 		glm::vec3 p1 = unprojectByPlane(stroke->points[0], face_points[0], face_normal);
 		std::cout << "Point " << glm::to_string(p1);
-		points.snapPoint(p1, 2.0f, e1);
+		points.snapPoint(p1, 8.0f, e1);
 		if (e1 >= 0) {
 			std::cout << " snapped to " << e1 << std::endl;
 		} else {
@@ -207,6 +207,11 @@ bool GLWidget3D::isStraightLine(Stroke* stroke) {
 	glm::vec2 vec2 = glm::normalize(midPt - stroke->points[0]);
 	if (glm::dot(vec1, vec2) > 0.95f) {
 		std::cout << "Straight line" << std::endl;
+		std::cout << "[0]: " << stroke->points[0].x << "," << stroke->points[0].y << std::endl;
+		std::cout << "[mid]: " << midPt.x << "," << midPt.y << std::endl;
+		std::cout << "[back]: " << stroke->points.back().x << "," << stroke->points.back().y << std::endl;
+		std::cout << "vec1: " << vec1.x << "," << vec1.y << std::endl;
+		std::cout << "vec2: " << vec2.x << "," << vec2.y << std::endl;
 		return true;
 	} else {
 		std::cout << "Not Straight line" << std::endl;
@@ -215,8 +220,8 @@ bool GLWidget3D::isStraightLine(Stroke* stroke) {
 }
 
 glm::vec2 GLWidget3D::findTurningPoint(Stroke* stroke) {
-	int index1 = stroke->points.size() * 0.3;
-	int index2 = stroke->points.size() * 0.7;
+	int index1 = stroke->points.size() * 0.2;
+	int index2 = stroke->points.size() * 0.8;
 	
 	glm::vec2 v = glm::normalize(stroke->points.back() - stroke->points[0]);
 
